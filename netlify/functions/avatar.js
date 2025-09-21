@@ -68,6 +68,7 @@ exports.handler = async (event, context) => {
 				username: user.username,
 				avatarURL: avatarURL,
 				discriminator: user.discriminator,
+				user: user,
 			}),
 		};
 	} catch (error) {
