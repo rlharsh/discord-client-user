@@ -4,23 +4,20 @@ require("dotenv").config();
 // Require the necessary discord.js classes for a serverless environment
 const { Client, GatewayIntentBits } = require("discord.js");
 
-// Get the bot token from the environment variables
-const token = process.env.DISCORD_BOT_TOKEN;
-
-// Create a new client instance
-const client = new Client({
-	intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
-});
-
-// Connect to Discord once before the handler is invoked to make fetching faster
-// This is an optimization for serverless environments
-client
-	.login(token)
-	.then(() => console.log("Discord client logged in successfully."))
-	.catch((error) => console.error("Failed to log in to Discord:", error));
-
 // The main handler for the Netlify Function
 exports.handler = async (event, context) => {
+	// Get the bot token from the environment variables
+	const token = process.env.DISCORD_BOT_TOKEN;
+
+	// Create a new client instance
+	const client = new Client({
+		intents: [GatewayIntentBits.Guilds, GatewayIntentBits.MessageContent],
+	});
+
+	// Login to Discord for this specific invocation
+	// This is the key change to make the function work on Netlify
+	await client.login(token);
+
 	// Check for the correct HTTP method and path
 	if (
 		event.httpMethod !== "GET" ||
@@ -43,11 +40,6 @@ exports.handler = async (event, context) => {
 		};
 	}
 
-	// Ensure the client is ready
-	if (!client.isReady()) {
-		await new Promise((resolve) => client.once("ready", resolve));
-	}
-
 	try {
 		// Fetch the user from Discord's API using the provided ID
 		const user = await client.users.fetch(userId);
@@ -68,7 +60,7 @@ exports.handler = async (event, context) => {
 				username: user.username,
 				avatarURL: avatarURL,
 				discriminator: user.discriminator,
-				user: user,
+				body: user,
 			}),
 		};
 	} catch (error) {
@@ -83,5 +75,8 @@ exports.handler = async (event, context) => {
 			},
 			body: JSON.stringify({ error: "Could not find a user with that ID." }),
 		};
+	} finally {
+		// Destroy the client to ensure the function exits cleanly
+		client.destroy();
 	}
 };
