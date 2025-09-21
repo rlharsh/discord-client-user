@@ -5,8 +5,7 @@ require("dotenv").config();
 const { Client, GatewayIntentBits } = require("discord.js");
 
 // Get the bot token from the environment variables
-const token =
-	"MTQxOTE2MTk2NjY2ODQxNTA5OQ.GfT_JN.KyuoLMI8XRd-r5CgRKSumsBkzDt2c9FJbE27S4";
+const token = process.env.DISCORD_BOT_TOKEN;
 
 // Create a new client instance
 const client = new Client({
